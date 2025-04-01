@@ -1,0 +1,606 @@
+### Prompt 1: Project Initialization (Next.js, TypeScript, Tailwind, pnpm)
+
+"Based on the Tech Stack (Appendix B) and PRD NFRs, initialize a new Next.js project named pm-american-pgmp in the current directory using pnpm. Ensure the following options are selected during setup (pnpm create next-app@latest --typescript):
+•	TypeScript: Yes
+•	ESLint: Yes
+•	Tailwind CSS: Yes
+•	src/ directory: Yes
+•	App Router: Yes (Recommended)
+•	Customize the default import alias? Yes, set it to @/*
+Verify that the project structure includes /src and that pnpm-lock.yaml exists."
+Do not install turbopack
+
+### Prompt 2: Git Repository Setup
+
+"Navigate into the newly created pm-american-pgmp project directory. Initialize a Git repository here. Create a .gitignore file (Next.js likely created a good default one, verify it includes .env.local, node_modules, .DS_Store, supabase/, *.log, etc.). Stage all the initial project files and create the first commit with the message: Initial commit: Setup Next.js with TypeScript, Tailwind, ESLint via create-next-app."
+User: Set up github project and connect to cursor
+
+### Prompt 3: Install Core Dependencies (tRPC, Zod, React Query)
+
+"Consulting the Tech Stack (Appendix B), install the necessary dependencies for tRPC, Zod, and React Query (tRPC's dependency) using pnpm. Run the following command:
+pnpm add @trpc/client @trpc/server @trpc/react-query @trpc/next @tanstack/react-query zod
+Verify the dependencies are added correctly to package.json."
+
+### Prompt 4: Install Supabase Client SDK
+
+"Install the Supabase JavaScript client library as specified in the Tech Stack (Appendix B). Use pnpm:
+pnpm add @supabase/supabase-js
+Confirm @supabase/supabase-js is listed in the package.json dependencies."
+User: Set up supabase organization/project in supabase
+
+### Prompt 5: Initialize shadcn/ui
+
+"Initialize the shadcn/ui library for UI components, following the Tech Stack (Appendix B) and PRD NFRs.
+Configure it as follows when prompted:
+•	Use TypeScript: Yes
+•	Style: Default
+•	Base color: Slate
+•	Location of global.css: src/app/globals.css
+•	Use CSS variables: Yes
+•	tailwind.config.js location: tailwind.config.ts (or .js if that's what you have)
+•	Configure import alias for components: Yes, set to @/components
+•	Configure import alias for utils: Yes, set to @/lib/utils
+•	Use React Server Components: Yes
+•	Write configuration to components.json: Yes
+Verify that components.json is created and the globals.css and tailwind.config.ts files are updated."
+
+### Prompt 6: Install Supabase CLI
+
+"Install the Supabase CLI globally to manage the local backend environment and migrations, as specified in the Tech Stack (Appendix B). Use the appropriate command for your operating system.
+•	macOS/Linux (using Homebrew): brew install supabase/tap/supabase
+After installation, verify it was successful by running supabase --version in your terminal."
+
+### Prompt 7: Initialize Supabase Locally
+
+"Initialize Supabase within the pm-american-pgmp project directory using the Supabase CLI, as required by the PRD (NFR-DX-01) and Tech Stack. Run the command:
+supabase init
+This should create a /supabase directory containing configuration files (config.toml) and folders for migrations and seeds. Ensure this /supabase directory is added to your .gitignore file if it wasn't already."
+Answer No to: Generate VS Code settings for Deno? And Generate IntelliJ Settings for Deno?
+
+### Prompt 8: Start Local Supabase Environment
+
+"Ensure Docker Desktop is installed and running on your system (User login manually) (Requirement from Tech Stack for local containerization). Start the local Supabase development stack using the Supabase CLI:
+supabase start
+Wait for the services to initialize. Note down the following information provided in the command output, as we will need it later:
+•	API URL
+•	DB URL
+•	Studio URL
+•	JWT Secret
+•	Anon key
+•	Service Role key
+Keep this terminal window running or be aware that the local Supabase instance needs to be running for development."
+
+### Prompt 9: Create Core tRPC Server Structure & Files
+
+"Following the tRPC Implementation Strategy (Appendix C, Section 5), create the necessary directory structure and empty files for the tRPC backend within the /src directory:
+1.	Create directory: /src/server
+2.	Create directory: /src/server/trpc
+3.	Create directory: /src/server/trpc/routers
+4.	Create empty file: /src/server/trpc/context.ts
+5.	Create empty file: /src/server/trpc/trpc.ts
+6.	Create empty file: /src/server/trpc/root.ts
+Verify this structure exists within /src."
+
+### Prompt 10: Implement Basic tRPC Initialization (trpc.ts)
+
+"Populate the /src/server/trpc/trpc.ts file based on Appendix C (Sections 3 & 4). This file initializes tRPC and defines reusable procedures.
+Include the following:
+1.	Import initTRPC from @trpc/server.
+2.	Import the (currently empty/undefined) Context type from ./context (we'll define it soon). Use import type { Context } from './context';.
+3.	Initialize tRPC using const t = initTRPC.context<Context>().create();.
+4.	Export the core tRPC components:
+    o	export const router = t.router;
+    o	export const publicProcedure = t.procedure;
+    o	export const middleware = t.middleware;
+5.	Define a placeholder protectedProcedure for authenticated routes as mentioned in Appendix C. For now, it can just reuse the public procedure until middleware is added:
+    o	export const protectedProcedure = t.procedure; // TODO: Implement auth middleware"
+
+### Prompt 11: Configure Environment Variables
+
+Create a `.env.local` file in the root of the `pm-american-pgmp` project directory. Add the Supabase URL and Anon key obtained from the `supabase start` command output (Prompt 8). Use the standard Next.js naming convention:
+Use code with caution.
+Markdown
+NEXT_PUBLIC_SUPABASE_URL=YOUR_API_URL_HERE
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY_HERE
+
+Replace the placeholder values with your actual local Supabase credentials. Ensure `.env.local` is listed in your `.gitignore` file (it should be by default).
+
+### Prompt 12: Install and Configure Supabase Server-Side Rendering Helpers
+
+Install the Supabase helper library for server-side rendering and auth management in Next.js, which simplifies context creation:
+
+`pnpm add @supabase/ssr`
+
+Create a new utility file for server-side Supabase client creation: `/src/lib/supabase/server.ts`. Implement a function within this file to create a Supabase client instance suitable for server components and server-side contexts, using cookie helpers from `@supabase/ssr`. Refer to the `@supabase/ssr` documentation for creating a server client within Next.js Server Components/API routes.
+*(Self-correction hint for user: The implementation will likely involve `createServerClient` from `@supabase/ssr` and reading/writing cookies using helpers from the `cookies` function from `next/headers`.)*
+
+### Prompt 13: Implement tRPC Context Creation (context.ts)
+
+Populate the `/src/server/trpc/context.ts` file based on Appendix B (Section 1).
+
+1.  Import necessary types/functions, including `CreateNextContextOptions` from `@trpc/server/adapters/next` and your Supabase server client creation function from `@/lib/supabase/server.ts`.
+2.  Define the `Context` type. It should include at minimum the request-scoped Supabase client instance and potentially user session data (e.g., `user: User | null`).
+3.  Implement the `createContext` async function which accepts `opts: CreateNextContextOptions`.
+4.  Inside `createContext`, use the Supabase server helper (from Prompt 12) to create a Supabase client instance using the request (`opts.req`) and response (`opts.res`) headers/cookies.
+5.  Attempt to fetch the current user session using the created Supabase client (`supabase.auth.getUser()`).
+6.  Return the context object conforming to the `Context` type, including the Supabase client and the fetched user data.
+7.  Export the `createContext` function and the `Context` type (`export type Context = ...`).
+
+### Prompt 14: Implement Root Router (root.ts)
+
+Populate the `/src/server/trpc/root.ts` file based on Appendix B (Section 2).
+
+1.  Import `router` and potentially `mergeRouters` (though not strictly needed yet) from `./trpc`.
+2.  (Placeholder) Import any specific routers you will create later (e.g., `import { exampleRouter } from './routers/example';`). For now, you can comment this out or create an empty example router file (`/src/server/trpc/routers/example.ts` exporting an empty router) if preferred.
+3.  Define the main `appRouter` by merging your domain-specific routers. Initially, it might just be an empty router or merge the placeholder example router: `export const appRouter = router({ /* example: exampleRouter, */ });` or `export const appRouter = router({});` if no example router exists yet.
+4.  Export the `appRouter` instance.
+5.  Export the **type** of the `appRouter` for client-side use: `export type AppRouter = typeof appRouter;`.
+
+### Prompt 15: Create Next.js tRPC API Route Handler
+
+Create the API route handler file for the Next.js App Router: `/src/app/api/trpc/[trpc]/route.ts`.
+
+1.  Import `fetchRequestHandler` from `@trpc/server/adapters/fetch`.
+2.  Import the `appRouter` from `@/server/trpc/root`.
+3.  Import the `createContext` function from `@/server/trpc/context`.
+4.  Define the request handler function using `fetchRequestHandler`:
+    ```typescript
+    import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+    import { type NextRequest } from 'next/server';
+
+    import { appRouter } from '@/server/trpc/root';
+    import { createContext } from '@/server/trpc/context';
+    import { cookies } from 'next/headers'; // Import cookies
+
+    // Define createContext function specific to this route handler
+    const createTRPCContext = async (req: NextRequest) => {
+      // Pass cookies() directly if your context function expects it
+      // Or extract necessary parts from req if that's what context needs
+      return createContext({ req, resHeaders: new Headers(), cookies: cookies() });
+    };
+
+
+    const handler = (req: NextRequest) =>
+      fetchRequestHandler({
+        endpoint: '/api/trpc',
+        req,
+        router: appRouter,
+        createContext: () => createTRPCContext(req), // Use the specific context creator
+        onError:
+          process.env.NODE_ENV === 'development'
+            ? ({ path, error }) => {
+                console.error(
+                  `❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`,
+                );
+              }
+            : undefined,
+      });
+
+    export { handler as GET, handler as POST };
+    ```
+Ensure the `createContext` call within `createTRPCContext` matches the expected arguments from your implementation in `context.ts` (it might need adjustment depending on how you used `@supabase/ssr`, especially regarding `cookies`). *Self-correction: Updated code example to better reflect App Router context needs with `cookies`.*
+
+### Prompt 16: Configure tRPC Client (client.ts)
+
+Create the tRPC client configuration file: `/src/lib/trpc/client.ts`.
+
+1.  Import `createTRPCReact` from `@trpc/react-query`.
+2.  Import the `AppRouter` type from `@/server/trpc/root`.
+3.  Initialize and export the tRPC client instance using `createTRPCReact<AppRouter>()`.
+    ```typescript
+    import { createTRPCReact } from '@trpc/react-query';
+    import type { AppRouter } from '@/server/trpc/root';
+
+    export const trpc = createTRPCReact<AppRouter>();
+    ```
+
+### Prompt 17: Create tRPC Provider Component (Provider.tsx)
+
+Create the React Query and tRPC provider component: `/src/lib/trpc/Provider.tsx`.
+
+1.  Make it a client component (`'use client';`).
+2.  Import `QueryClient`, `QueryClientProvider` from `@tanstack/react-query`.
+3.  Import `httpBatchLink` from `@trpc/client`.
+4.  Import the `trpc` instance from `./client`.
+5.  Import `useState` from `react`.
+6.  Create a component (e.g., `TRPCProvider`) that accepts `children` as props.
+7.  Inside the component, use `useState` to create instances of `QueryClient` and the tRPC client (`trpc.createClient`). Ensure these are created only once per component lifecycle.
+8.  Configure the tRPC client with `httpBatchLink`, setting the `url` to `/api/trpc` (use a helper function to get the base URL for deployment flexibility).
+9.  Wrap the `children` with `trpc.Provider`, `QueryClientProvider`.
+    ```typescript
+    'use client';
+
+    import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+    import { httpBatchLink } from '@trpc/client';
+    import React, { useState } from 'react';
+    import { trpc } from './client';
+
+    // Helper function to determine the base URL
+    function getBaseUrl() {
+      if (typeof window !== 'undefined')
+        // browser should use relative path
+        return '';
+      if (process.env.VERCEL_URL)
+        // reference for vercel.com
+        return `https://${process.env.VERCEL_URL}`;
+      if (process.env.RENDER_INTERNAL_HOSTNAME)
+        // reference for render.com
+        return `http://${process.env.RENDER_INTERNAL_HOSTNAME}:${process.env.PORT}`;
+      // assume localhost
+      return `http://localhost:${process.env.PORT ?? 3000}`;
+    }
+
+
+    export default function TRPCProvider({ children }: { children: React.ReactNode }) {
+      const [queryClient] = useState(() => new QueryClient());
+      const [trpcClient] = useState(() =>
+        trpc.createClient({
+          links: [
+            httpBatchLink({
+              url: `${getBaseUrl()}/api/trpc`,
+            }),
+          ],
+        }),
+      );
+
+      return (
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </trpc.Provider>
+      );
+    }
+    ```
+*(Note: Included a common `getBaseUrl` implementation. You might place this in `@/lib/utils` or keep it here if preferred.)*
+
+Prompt 17.1: Create getBaseUrl Utility Function
+The TRPCProvider component (/src/lib/trpc/Provider.tsx) requires the getBaseUrl helper function to correctly configure the tRPC client's API endpoint URL, but the file /src/lib/utils.ts containing it was not explicitly created in a previous step.
+
+Create the utility file: /src/lib/utils.ts.
+Add the following code to /src/lib/utils.ts. This function determines the correct base URL whether running in the browser, on Vercel, Render, or locally.
+// src/lib/utils.ts
+
+// Helper function to determine the base URL
+export function getBaseUrl() {
+  if (typeof window !== 'undefined')
+    // browser should use relative path
+    return '';
+  if (process.env.VERCEL_URL)
+    // reference for vercel.com
+    return `https://${process.env.VERCEL_URL}`;
+  if (process.env.RENDER_INTERNAL_HOSTNAME)
+    // reference for render.com
+    return `http://${process.env.RENDER_INTERNAL_HOSTNAME}:${process.env.PORT}`;
+  // assume localhost
+  return `http://localhost:${process.env.PORT ?? 3000}`;
+}
+
+// You might also add the shadcn 'cn' utility function here if it's not already present
+// from the shadcn/ui init step. If 'components.json' configured utils to '@/lib/utils',
+// it should have added it automatically. Verify its presence.
+// import { type ClassValue, clsx } from "clsx"
+// import { twMerge } from "tailwind-merge"
+//
+// export function cn(...inputs: ClassValue[]) {
+//   return twMerge(clsx(inputs))
+// }
+Use code with caution.
+TypeScript
+Verify that shadcn/ui's cn utility function is also present in this file if you configured @/lib/utils during shadcn/ui init (Prompt 5). If not, add it from the standard shadcn setup.
+
+### Prompt 18: Integrate tRPC Provider in Root Layout
+
+Modify the root layout file (`/src/app/layout.tsx`) to include the `TRPCProvider`.
+
+1.  Import the `TRPCProvider` component from `@/lib/trpc/Provider`.
+2.  Wrap the main content within the `<body>` tag (or the appropriate inner element) with `<TRPCProvider>`.
+    ```typescript
+     import TRPCProvider from '@/lib/trpc/Provider';
+     // ... other imports like './globals.css', Inter font, etc.
+
+     export const metadata = {
+       title: 'The PM American PgMP', // Example title
+       description: 'PgMP Exam Simulator & Learning Platform', // Example description
+     };
+
+     export default function RootLayout({
+       children,
+     }: {
+       children: React.ReactNode;
+     }) {
+       return (
+         <html lang="en" suppressHydrationWarning>
+           <head />
+           <body>
+             <TRPCProvider> {/* Wrap the content */}
+               {/* You might have other providers here like ThemeProvider if using shadcn themes */}
+               {children}
+             </TRPCProvider>
+           </body>
+         </html>
+       );
+     }
+    ```
+
+### Prompt 19: Create Example Router and Procedure
+
+Create the first domain-specific router file: `/src/server/trpc/routers/example.ts`.
+
+1.  Import `z` from `zod`.
+2.  Import `router` and `publicProcedure` from `../trpc`.
+3.  Define an `exampleRouter` using the `router` function.
+4.  Add a simple `hello` procedure using `publicProcedure`.
+5.  Use `.input()` with a Zod schema to define expected input (e.g., `z.object({ text: z.string() })`).
+6.  Use `.query()` for read operations. Implement the query function to return a greeting object (e.g., `{ greeting: `Hello ${input.text}` }`).
+    ```typescript
+    import { z } from 'zod';
+    import { router, publicProcedure } from '../trpc';
+
+    export const exampleRouter = router({
+      hello: publicProcedure
+        .input(z.object({ text: z.string() }))
+        .query(({ input }) => {
+          console.log("Received input in 'hello' procedure:", input); // Add server-side logging
+          return {
+            greeting: `Hello ${input.text}`,
+          };
+        }),
+      // Add more procedures here later
+    });
+    ```
+
+### Prompt 20: Merge Example Router into Root Router
+
+Update the main app router file (`/src/server/trpc/root.ts`) to include the new `exampleRouter`.
+
+1.  Import the `exampleRouter` from `./routers/example`.
+2.  If you used `mergeRouters` previously, ensure it's imported from `./trpc`. If not, update the router definition.
+3.  Add the `exampleRouter` to the `appRouter` definition under a specific key (e.g., `example`).
+    ```typescript
+    import { router } from './trpc'; // or { router, mergeRouters } if you prefer
+    import { exampleRouter } from './routers/example';
+    // Import other routers like authRouter, examRouter etc. later
+
+    export const appRouter = router({
+      example: exampleRouter,
+      // auth: authRouter, // Placeholder for future auth router
+      // exam: examRouter,   // Placeholder for future exam router
+      // ... merge other routers here
+    });
+
+    // export type AppRouter = ReturnType<typeof mergeRouters<...>>; // If using mergeRouters
+    export type AppRouter = typeof appRouter; // Keep this export
+    ```
+Verify that the `AppRouter` type is still correctly exported.
+
+### Prompt 21: Test Example Procedure from Frontend
+
+Create a simple client component to test the example.hello tRPC procedure and verify the end-to-end connection established in the previous steps.
+
+1.  Create a new file: `/src/app/test-trpc/page.tsx`.
+2.  Make it a client component (`'use client';`).
+3.  Import `trpc` from `@/lib/trpc/client`.
+4.  Import `useState` from `react`.
+5.  Inside the component, use the `trpc.example.hello.useQuery` hook. Pass an input object like `{ text: 'World' }`. Handle loading and error states.
+6.  Conditionally render the greeting message from the query data (`data.greeting`).
+7.  Add basic JSX to display the loading state and the result.
+8.  Navigate to `/test-trpc` in your browser (ensure your local dev server and Supabase are running) and verify that "Hello World" (or similar) is displayed after loading. Check the browser console for errors and the server console (where `pnpm dev` is running) for the "Received input..." log from Prompt 19.
+
+```typescript
+// src/app/test-trpc/page.tsx
+'use client';
+
+import { trpc } from '@/lib/trpc/client';
+import React from 'react';
+
+export default function TestTrpcPage() {
+  const { data, isLoading, error } = trpc.example.hello.useQuery({ text: 'from Client Component' });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return (
+    <div>
+      <h1>tRPC Connection Test</h1>
+      <p>Server says: {data?.greeting}</p>
+    </div>
+  );
+}
+Use code with caution.
+
+
+Prompt 22: Create Client-Side Supabase Utility
+Create the utility file for initializing the Supabase client specifically for use in browser/client components, using the @supabase/ssr library as planned.
+
+Create a new file: /src/lib/supabase/client.ts.
+Import createBrowserClient from @supabase/ssr.
+Define and export a function (e.g., createClient) that initializes and returns a Supabase client instance using createBrowserClient.
+Pass the environment variables NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (read from process.env) to createBrowserClient.
+// src/lib/supabase/client.ts
+import { createBrowserClient } from '@supabase/ssr';
+
+export function createClient() {
+  // Create a supabase client on the browser with project's credentials
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+Use code with caution.
+TypeScript
+(Note: The exclamation marks assert that these environment variables will be defined. Ensure they are correctly set in your .env.local).
+
+Prompt 23: Implement tRPC Authentication Middleware
+Define the tRPC middleware function in /src/server/trpc/trpc.ts to protect procedures by checking for a valid user session in the context.
+
+Open /src/server/trpc/trpc.ts.
+Import TRPCError from @trpc/server.
+Define a middleware function (e.g., isAuthed) using t.middleware.
+Inside the middleware, access the ctx (context object).
+Check if ctx.user (or however you stored the user session data in your Context type from Prompt 13) exists and is valid.
+If the user is not authenticated, throw a TRPCError with the code UNAUTHORIZED.
+If the user is authenticated, call next() and pass down the context, potentially adding the guaranteed user object to the context type for downstream procedures (return next({ ctx: { ...ctx, user: ctx.user } });).
+// Add near the top of src/server/trpc/trpc.ts
+import { TRPCError } from '@trpc/server';
+
+// ... other imports and t initialisation ...
+
+// Define the authentication middleware
+const isAuthed = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) { // Assuming 'user' is populated in your context upon successful session fetch
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not authenticated' });
+  }
+  return next({
+    ctx: {
+      // Infers the `user` as non-nullable
+      ...ctx,
+      user: ctx.user,
+    },
+  });
+});
+
+// ... keep existing exports like router, publicProcedure, middleware ...
+
+Prompt 24: Update protectedProcedure Export
+Update the protectedProcedure export in /src/server/trpc/trpc.ts to apply the isAuthed middleware created in the previous step.
+
+Find the line export const protectedProcedure = t.procedure; // TODO: Implement auth middleware.
+Modify it to chain the isAuthed middleware onto the base procedure:
+export const protectedProcedure = t.procedure.use(isAuthed);
+// Replace the placeholder in src/server/trpc/trpc.ts
+// export const protectedProcedure = t.procedure; // TODO: Implement auth middleware
+export const protectedProcedure = t.procedure.use(isAuthed); // Apply the auth middleware
+Use code with caution.
+
+Prompt 25: Create Initial Auth Router
+Create the domain-specific router file for authentication procedures.
+
+Create a new file: /src/server/trpc/routers/auth.ts.
+Import router and publicProcedure, protectedProcedure from ../trpc.
+Import z from zod.
+Define and export an authRouter using the router function. Leave it empty for now, or add a placeholder comment.
+// src/server/trpc/routers/auth.ts
+import { z } from 'zod';
+import { router, publicProcedure, protectedProcedure } from '../trpc';
+
+export const authRouter = router({
+  // Procedures related to authentication will go here
+  // e.g., getSession, signUp, signInWithPassword, signOut etc.
+});
+Use code with caution.
+
+
+Prompt 26: Implement getSession Procedure
+Implement the first procedure within authRouter (/src/server/trpc/routers/auth.ts) to retrieve the current user session details using the protectedProcedure.
+
+Open /src/server/trpc/routers/auth.ts.
+Add a procedure named getSession using protectedProcedure. Since protectedProcedure guarantees ctx.user exists (thanks to the middleware), this procedure should only be callable by authenticated users.
+This procedure doesn't need input, so omit .input().
+Use .query() as it's a read operation.
+Inside the query function (({ ctx }) => { ... }), simply return the ctx.user object obtained from the context.
+// Inside the authRouter definition in src/server/trpc/routers/auth.ts
+import { z } from 'zod';
+import { router, publicProcedure, protectedProcedure } from '../trpc';
+
+export const authRouter = router({
+  getSession: protectedProcedure.query(({ ctx }) => {
+    // The 'isAuthed' middleware ensures ctx.user is non-null here
+    return ctx.user;
+  }),
+
+  // Placeholder for sign-up (public, as user isn't logged in yet)
+  // signUp: publicProcedure
+  //   .input(z.object({ email: z.string().email(), password: z.string().min(8) }))
+  //   .mutation(async ({ input, ctx }) => {
+  //     // TODO: Implement Supabase sign-up logic using ctx.supabase
+  //     // Remember Supabase handles hashing; call ctx.supabase.auth.signUp
+  //     // Handle potential errors (e.g., user already exists)
+  //   }),
+
+  // Add other procedures like signIn, signOut later
+});
+Use code with caution.
+TypeScript
+
+Prompt 27: Merge Auth Router into Root Router
+Update the main app router (/src/server/trpc/root.ts) to include the new authRouter.
+
+Open /src/server/trpc/root.ts.
+Import the authRouter from ./routers/auth.
+Add the authRouter to the main appRouter definition under the key auth.
+// src/server/trpc/root.ts
+import { router } from './trpc';
+import { exampleRouter } from './routers/example';
+import { authRouter } from './routers/auth'; // Import the auth router
+// Import other routers later
+
+export const appRouter = router({
+  example: exampleRouter,
+  auth: authRouter, // Add the auth router
+  // exam: examRouter,
+  // ... merge other routers here
+});
+
+export type AppRouter = typeof appRouter;
+Use code with caution.
+TypeScript
+
+Prompt 28: Create Basic Database Migration for User Profiles
+Create the first Supabase database migration using the CLI to set up a profiles table, linked to the built-in auth.users table. This table can store user-specific data not included in Supabase Auth (like display names, roles, etc., although we'll start simple).
+
+Open your terminal in the project root.
+Run the Supabase CLI command to create a new migration file:
+supabase migration new create_profiles_table
+This will create a new SQL file in the /supabase/migrations/ directory (e.g., <timestamp>_create_profiles_table.sql).
+Open the newly created SQL file and add the following SQL statement to create the profiles table:
+-- /supabase/migrations/<timestamp>_create_profiles_table.sql
+
+-- Create a table for public profiles
+create table profiles (
+  id uuid references auth.users not null primary key, -- Links to auth.users table
+  updated_at timestamp with time zone,
+  username text unique,
+  full_name text,
+  avatar_url text,
+  website text,
+  -- Add any other profile fields needed later (e.g., subscription_status, role)
+
+  constraint username_length check (char_length(username) >= 3)
+);
+
+-- Set up Row Level Security (RLS)
+-- See https://supabase.com/docs/guides/database/postgres/row-level-security
+alter table profiles enable row level security;
+
+create policy "Public profiles are viewable by everyone." on profiles
+  for select using (true);
+
+create policy "Users can insert their own profile." on profiles
+  for insert with check (auth.uid() = id);
+
+create policy "Users can update own profile." on profiles
+  for update using (auth.uid() = id);
+
+-- This trigger automatically creates a profile entry when a new user signs up via Supabase Auth.
+-- See https://supabase.com/docs/guides/auth/managing-user-data#using-triggers for more details.
+create function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, full_name, avatar_url)
+  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+Use code with caution.
+SQL
+Apply the migration to your local Supabase instance by running:
+supabase db reset (Use this during early dev to reset and apply all migrations) or supabase migration up (if you want to apply only new migrations without resetting). Caution: db reset will wipe local data.
+
